@@ -1,0 +1,16 @@
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+# Go Patch
+/vendor/
+/Godeps/
+# Test binary, built with `go test -c`
+*.test
