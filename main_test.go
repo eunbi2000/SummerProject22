@@ -8,19 +8,30 @@ import (
 	"testing"
 )
 
-//increment counter 진짜 ++ 하는지 and handler response 제대로?
+var tests = []struct {
+	x   int
+	exp int
+}{
+	{0, 1},
+	{1, 2},
+	{2, 3},
+	{3, 4},
+	{4, 5},
+	{5, 6},
+	{6, 5}, // incorrect test case
+}
+
 func TestIncrement(t *testing.T) {
-	for j := 1; j <= 10; j++ {
-		compare := j
-		counter := Increment(j - 1)
-		if counter != compare {
-			t.Errorf("expected '%d' but got '%d'", compare, counter)
+	for _, e := range tests {
+		compare := Increment(e.x)
+		if compare != e.exp {
+			t.Errorf("expected '%d' but got '%d'", compare, e.exp)
 		}
 	}
 }
 func TestIncrementCounterHandler(t *testing.T) {
-	for j := 1; j <= 10; j++ {
-		expected := strconv.Itoa(j)
+	for _, e := range tests {
+		expected := strconv.Itoa(e.exp)
 		req := httptest.NewRequest(http.MethodGet, "/increment?", nil)
 		w := httptest.NewRecorder()
 		IncrementCounterHandler(w, req)
