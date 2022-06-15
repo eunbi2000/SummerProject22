@@ -15,17 +15,22 @@ func echoString(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "hello")
 }
 
-func incrementCounter(w http.ResponseWriter, r *http.Request) {
+func increment(c int) (counter int) {
+	c++
+	counter = c
+	return
+}
+
+func incrementCounterHandler(w http.ResponseWriter, r *http.Request) {
 	mutex.Lock()
-	counter++
-	fmt.Fprintf(w, strconv.Itoa(counter))
+	fmt.Fprintf(w, strconv.Itoa(increment(counter)))
 	mutex.Unlock()
 }
 
 func main() {
 	http.Handle("/", http.FileServer(http.Dir("./static")))
 
-	http.HandleFunc("/increment", incrementCounter)
+	http.HandleFunc("/increment", incrementCounterHandler)
 
 	http.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Hi")
