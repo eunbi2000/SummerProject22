@@ -22,27 +22,28 @@ var tests = []struct {
 }
 
 func TestIncrement(t *testing.T) {
-	for _, e := range tests {
-		compare := Increment(e.x)
-		if compare != e.exp {
-			t.Errorf("expected '%d' but got '%d'", compare, e.exp)
+	for _, test := range tests {
+		compare := increment(test.x)
+		if compare != test.exp {
+			t.Errorf("expected '%d' but got '%d'", compare, test.exp)
 		}
 	}
 }
 func TestIncrementCounterHandler(t *testing.T) {
-	for _, e := range tests {
-		expected := strconv.Itoa(e.exp)
-		req := httptest.NewRequest(http.MethodGet, "/increment?", nil)
+	for _, test := range tests {
+		expected := strconv.Itoa(test.exp)
+		req := httptest.NewRequest(http.MethodGet, "/increment", nil)
 		w := httptest.NewRecorder()
-		IncrementCounterHandler(w, req)
+		incrementCounterHandler(w, req)
 		res := w.Result()
 		defer res.Body.Close()
 		data, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			t.Errorf("Error: %v", err)
 		}
-		if string(data) != expected {
-			t.Errorf("Expected %v but got %v", expected, string(data))
+		result := string(data)
+		if result != expected {
+			t.Errorf("Expected %v but got %v", expected, result)
 		}
 	}
 }
