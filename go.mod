@@ -1,3 +1,3 @@
-module eunbi2000/summerproject
+module summerproject
 
 go 1.18
