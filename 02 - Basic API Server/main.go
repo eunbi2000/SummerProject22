@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -17,7 +18,8 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
-	myRouter.HandleFunc("/all", returnAllBooks)
+	myRouter.HandleFunc("/books", returnAllBooks)
+	myRouter.HandleFunc("/book", createNewBook).Methods("POST")
 	myRouter.HandleFunc("/book/{id}", returnSingleBook)
 	log.Fatal(http.ListenAndServe(":3000", myRouter))
 }
@@ -51,4 +53,13 @@ func returnSingleBook(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(book)
 		}
 	}
+}
+
+func createNewBook(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var book Book
+	json.Unmarshal(reqBody, &book)
+	Books = append(Books, book)
+
+	json.NewEncoder(w).Encode(book)
 }
