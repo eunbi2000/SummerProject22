@@ -11,55 +11,74 @@ import (
 )
 
 func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to the HomePage!")
-	fmt.Println("Endpoint Hit: homePage")
+	fmt.Fprintf(w, "Welcome to the MBTI Test Home Page!")
 }
 
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
-	myRouter.HandleFunc("/books", returnAllBooks)
-	myRouter.HandleFunc("/book", createNewBook).Methods("POST")
-	myRouter.HandleFunc("/book/{id}", returnSingleBook)
+	myRouter.HandleFunc("/users", returnAllUsers)
+	myRouter.HandleFunc("/user", createNewUser).Methods("POST")
+	myRouter.HandleFunc("/user/{id}", deleteUser).Methods("DELETE")
+	myRouter.HandleFunc("/user/{id}", returnSingleUser)
 	log.Fatal(http.ListenAndServe(":3000", myRouter))
 }
 
 func main() {
-	Books = []Book{
-		{Id: "1", Title: "Hello", Author: "Article Author"},
-		{Id: "2", Title: "Hello 2", Author: "Article Author"},
+	Users = []User{
+		{Id: "1", Name: "John Smith", Email: "example1@gmail.com", MBTI: "INTP"},
+		{Id: "2", Name: "Jane Doe", Email: "example2@gmail.com", MBTI: "ENFP"},
 	}
 	handleRequests()
 }
 
-type Book struct {
-	Id     string `json:"Id"`
-	Title  string `json:"Title"`
-	Author string `json:"Author"`
+type User struct {
+	Id    string `json:"Id"`
+	Name  string `json:"Name"`
+	Email string `json:"Email"`
+	MBTI  string `json:"MBTI"`
 }
 
-var Books []Book
+var Users []User
 
-func returnAllBooks(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(Books)
+func returnAllUsers(w http.ResponseWriter, r *http.Request) {
+	prettyprint(w, Users)
 }
 
-func returnSingleBook(w http.ResponseWriter, r *http.Request) {
+func prettyprint(w http.ResponseWriter, data interface{}) {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "    ")
+	enc.Encode(data)
+	return
+}
+
+func returnSingleUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["id"]
 
-	for _, book := range Books {
-		if book.Id == key {
-			json.NewEncoder(w).Encode(book)
+	for _, user := range Users {
+		if user.Id == key {
+			prettyprint(w, user)
 		}
 	}
 }
 
-func createNewBook(w http.ResponseWriter, r *http.Request) {
+func createNewUser(w http.ResponseWriter, r *http.Request) {
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	var book Book
-	json.Unmarshal(reqBody, &book)
-	Books = append(Books, book)
+	var user User
+	json.Unmarshal(reqBody, &user)
+	Users = append(Users, user)
 
-	json.NewEncoder(w).Encode(book)
+	prettyprint(w, user)
+}
+
+func deleteUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	for index, user := range Users {
+		if user.Id == id {
+			Users = append(Users[:index], Users[index+1:]...)
+		}
+	}
 }
