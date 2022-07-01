@@ -11,10 +11,11 @@ import (
 )
 
 func TestReturnAllUsersHandler(t *testing.T) {
-	Users = []User{
+	expected := []User{
 		{Id: 1, Name: "John Smith", Email: "example1@gmail.com", MBTI: "INTP"},
 		{Id: 2, Name: "Jane Doe", Email: "example2@gmail.com", MBTI: "ENFP"},
 	}
+	Users = append(expected)
 	req, err := http.NewRequest("GET", "/users", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -25,10 +26,6 @@ func TestReturnAllUsersHandler(t *testing.T) {
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
-	}
-	expected := []User{
-		{Id: 1, Name: "John Smith", Email: "example1@gmail.com", MBTI: "INTP"},
-		{Id: 2, Name: "Jane Doe", Email: "example2@gmail.com", MBTI: "ENFP"},
 	}
 	exp, err := json.Marshal(expected)
 	if err != nil {
@@ -41,6 +38,9 @@ func TestReturnAllUsersHandler(t *testing.T) {
 }
 
 func TestReturnSingleUserHandler(t *testing.T) { //ask how to set specific url param
+	expected := &User{
+		Id: 1, Name: "John Smith", Email: "example1@gmail.com", MBTI: "INTP",
+	}
 	Users = []User{
 		{Id: 1, Name: "John Smith", Email: "example1@gmail.com", MBTI: "INTP"},
 		{Id: 2, Name: "Jane Doe", Email: "example2@gmail.com", MBTI: "ENFP"},
@@ -59,17 +59,14 @@ func TestReturnSingleUserHandler(t *testing.T) { //ask how to set specific url p
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	expected := &User{
-		Id: 1, Name: "John Smith", Email: "example1@gmail.com", MBTI: "INTP",
-	}
 
 	exp, err := json.Marshal(expected)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	want, err := getSingleUser(1)
-	if err != nil {
+	want := getSingleUser(1)
+	if want == nil {
 		t.Errorf(err.Error())
 	}
 
@@ -104,8 +101,8 @@ func TestCreateNewUserHandler(t *testing.T) { //create 했을때 getalluser 통�
 	}
 	expected := &User{Id: 3, Name: "Test", Email: "test@gmail.com", MBTI: "ISFJ"}
 
-	want, err := getSingleUser(3)
-	if err != nil {
+	want := getSingleUser(3)
+	if want == nil {
 		t.Errorf(err.Error())
 	}
 
@@ -133,19 +130,15 @@ func TestDeleteUserHandler(t *testing.T) { //ask how to set specific url param
 	router.HandleFunc("/user/{id}", deleteUserHandler).Methods("DELETE")
 	router.ServeHTTP(rr, req)
 
-	if status := rr.Code; status != http.StatusAccepted {
+	if status := rr.Code; status != http.StatusNoContent {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusAccepted)
 	}
 
-	want, err := getSingleUser(1)
+	want := getSingleUser(1)
 	// want no such user error
-	if err == nil {
-		t.Errorf(err.Error())
-	}
-
 	if want != nil {
-		t.Errorf("Didn't delete user, got %v want %v", want, nil)
+		t.Errorf(err.Error())
 	}
 
 	if rr.Body.String() != "success" {

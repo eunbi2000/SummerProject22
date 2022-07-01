@@ -25,23 +25,37 @@ func getUsers() []User {
 	return Users
 }
 
+func getSingleUser(id int) *User {
+	for _, user := range Users {
+		if user.Id == id {
+			return &user
+		}
+	}
+	return nil
+}
+
+func createNewUser(user User) {
+	Users = append(Users, user)
+}
+
+func deleteUser(id int) (exists bool) {
+	for index, user := range Users {
+		if user.Id == id {
+			Users = append(Users[:index], Users[index+1:]...)
+			return true
+		}
+	}
+	return false
+}
+
 func returnAllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	result, err := json.Marshal(getUsers())
 	if err != nil {
-		fmt.Print(err.Error())
+		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(result)
 	w.WriteHeader(http.StatusOK)
-}
-
-func getSingleUser(id int) (*User, error) {
-	for _, user := range Users {
-		if user.Id == id {
-			return &user, nil
-		}
-	}
-	return nil, errors.New("no such user exists")
 }
 
 func returnSingleUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,26 +63,24 @@ func returnSingleUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Fatal(err.Error())
+		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 
-	user, err := getSingleUser(id)
-	if err != nil {
-		fmt.Print(err.Error())
+	user := getSingleUser(id)
+	if user != nil {
+		result, err := json.Marshal(user)
+		if err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(result)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("no such user"))
+		w.WriteHeader(http.StatusOK)
 	}
 
-	result, err := json.Marshal(user)
-	if err != nil {
-		fmt.Print(err.Error())
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(result)
-	w.WriteHeader(http.StatusOK)
-}
-
-func createNewUser(user User) {
-	Users = append(Users, user)
 }
 
 func createNewUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -80,23 +92,20 @@ func createNewUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("success"))
 }
 
-func deleteUser(id int) {
-	for index, user := range Users {
-		if user.Id == id {
-			Users = append(Users[:index], Users[index+1:]...)
-		}
-	}
-}
-
 func deleteUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		log.Fatal(err.Error())
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte("delete unsuccessful"))
 	}
-	deleteUser(id)
-	w.WriteHeader(http.StatusAccepted)
-	w.Write([]byte("success"))
+	success := deleteUser(id)
+	if success {
+		w.WriteHeader(http.StatusNoContent)
+		w.Write([]byte("success"))
+	} else {
+		log.Fatal(errors.New("user doesn't exist"))
+	}
 }
 
 func homePage(w http.ResponseWriter, r *http.Request) {
