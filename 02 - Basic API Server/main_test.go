@@ -38,13 +38,10 @@ func TestReturnAllUsersHandler(t *testing.T) {
 }
 
 func TestReturnSingleUserHandler(t *testing.T) { //ask how to set specific url param
-	expected := &User{
+	expected := User{
 		Id: 1, Name: "John Smith", Email: "example1@gmail.com", MBTI: "INTP",
 	}
-	Users = []User{
-		{Id: 1, Name: "John Smith", Email: "example1@gmail.com", MBTI: "INTP"},
-		{Id: 2, Name: "Jane Doe", Email: "example2@gmail.com", MBTI: "ENFP"},
-	}
+	Users = append(Users, expected)
 	req, err := http.NewRequest("GET", "/user/1", nil)
 	if err != nil {
 		t.Fatal(err)
@@ -70,7 +67,7 @@ func TestReturnSingleUserHandler(t *testing.T) { //ask how to set specific url p
 		t.Errorf(err.Error())
 	}
 
-	if !(reflect.DeepEqual(want, expected)) {
+	if !(reflect.DeepEqual(*want, expected)) {
 		t.Errorf("Didn't get correct user, got %v want %v", want, expected)
 	}
 	if rr.Body.String() != string(exp) {
